@@ -39,11 +39,17 @@ Dự án yêu cầu các thư viện sau:
 pip install pyvi underthesea pandas numpy tqdm datasets loguru
 ```
 
-### 2. Quy trình thực hiện
-1. **Crawl Data**: Chạy `crawl_data.ipynb` để lấy corpus tiếng Việt.
-2. **Preprocessing**: Chạy `tokenization.ipynb` để làm sạch và tách từ. Kết quả sẽ được lưu vào `data/train/`.
-3. **Training**: Chạy `train_ngrams.ipynb` để huấn luyện. Bạn có thể chọn các phương pháp smoothing khác nhau.
-4. **Evaluation**: Chạy `evaluation.ipynb` để xem báo cáo về Perplexity và Accuracy của từng mô hình.
+### 3. Chạy Web Application (Giao diện người dùng)
+Dự án cung cấp một giao diện web đơn giản để bạn trải nghiệm việc gợi ý từ tiếp theo:
+```bash
+# Cài đặt thêm thư viện cho web
+pip install fastapi uvicorn pydantic
+
+# Đảm bảo các file model (.pkl.gz) đã có sẵn trong thư mục gốc
+# Chạy ứng dụng
+python app.py
+```
+Sau đó, truy cập `http://127.0.0.1:8000` trên trình duyệt.
 
 ## 📊 Kết quả đánh giá sơ bộ
 

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Autocomplete - Vietnamese N-Gram</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass { background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; }
+
+        #editor {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            padding: 1.25rem;
+            min-height: 12rem;
+            max-height: 12rem;
+            overflow-y: auto;
+            outline: none;
+            color: #1e293b;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-sizing: border-box;
+            caret-color: #334155;
+        }
+
+        #editor:empty::before {
+            content: attr(data-placeholder);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        #editor::-webkit-scrollbar { width: 8px; }
+        #editor::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .ghost-suggestion { color: #94a3b8; user-select: none; pointer-events: none; }
+        .ghost-hint {
+            font-size: 11px; margin-left: 5px; background: #e2e8f0; border: 1px solid #cbd5e1;
+            color: #64748b; border-radius: 4px; padding: 1px 5px; font-family: monospace; vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="min-h-screen py-12 px-4">
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-slate-800 mb-3">Trợ lý Viết Văn Bản Thông Minh</h1>
+            <p class="text-slate-500">Tự động gợi ý từ & điền nhanh với phím Tab dựa trên Trigram Models</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="glass p-6 col-span-1 h-fit">
+                <h2 class="text-lg font-semibold mb-4 text-slate-700">Cài đặt</h2>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Phương pháp Làm mịn</label>
+                        <select id="method" class="w-full rounded-lg border-slate-200 shadow-sm p-2.5 text-sm bg-slate-50 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                            <option value="kn">Kneser-Ney</option>
+                            <option value="laplace">Laplace (Add-1)</option>
+                            <option value="addk">Add-k Smoothing</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">
+                            Số từ gợi ý: <span id="topk_val" class="font-bold text-blue-600">5</span>
+                        </label>
+                        <input type="range" id="top_k" min="1" max="10" value="5" class="w-full accent-blue-600">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass p-6 col-span-1 md:col-span-3">
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-base font-medium text-slate-700">Soạn thảo văn bản</span>
+                        <span class="text-sm text-slate-400">Nhấn <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded-md text-slate-600 font-mono text-xs shadow-sm">Tab ↹</kbd> để điền</span>
+                    </div>
+
+                    <div class="rounded-xl border-2 border-slate-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm overflow-hidden relative">
+                        <div id="editor" contenteditable="true" spellcheck="true" data-placeholder="Gõ một vài từ và ấn Dấu cách (Space)..."></div>
+                        <div id="loader" class="absolute top-3 right-3 hidden z-10">
+                            <svg class="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mt-6">
+                    <div>
+                        <h3 class="text-sm font-semibold text-purple-600 uppercase tracking-wider mb-2">Gợi ý từ tiếp theo</h3>
+                        <div id="suggestions" class="flex flex-wrap gap-2 min-h-[40px]"><span class="text-sm text-slate-400 italic mt-1">Đang chờ nhập liệu...</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor'), 
+              loader = document.getElementById('loader'), 
+              sugg = document.getElementById('suggestions'), 
+              methodSelect = document.getElementById('method'), 
+              topKInput = document.getElementById('top_k');
+              
+        document.getElementById('top_k').oninput = e => document.getElementById('topk_val').innerText = e.target.value;
+
+        let ghostSpan = null, currentGhostWord = '', typingTimer; const DEBOUNCE = 300;
+
+        function getEditorText() {
+            let text = ''; editor.childNodes.forEach(node => { if (node !== ghostSpan) text += node.textContent; }); return text;
+        }
+
+        function removeGhost() { if (ghostSpan && ghostSpan.parentNode) ghostSpan.remove(); ghostSpan = null; currentGhostWord = ''; }
+
+        function insertGhost(word) {
+            removeGhost(); if (!word) return;
+            const sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
+            const range = sel.getRangeAt(0);
+
+            ghostSpan = document.createElement('span'); ghostSpan.className = 'ghost-suggestion'; ghostSpan.contentEditable = 'false';
+            ghostSpan.appendChild(document.createTextNode(word));
+            const hint = document.createElement('span'); hint.className = 'ghost-hint'; hint.textContent = ' Tab ↹'; ghostSpan.appendChild(hint);
+            range.insertNode(ghostSpan);
+
+            const newRange = document.createRange(); newRange.setStartBefore(ghostSpan); newRange.collapse(true);
+            sel.removeAllRanges(); sel.addRange(newRange);
+            currentGhostWord = word;
+        }
+
+        function acceptGhost() {
+            if (!ghostSpan || !currentGhostWord) return;
+            const textNode = document.createTextNode(currentGhostWord + ' '); ghostSpan.replaceWith(textNode); ghostSpan = null;
+            const sel = window.getSelection(), range = document.createRange();
+            range.setStartAfter(textNode); range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
+            currentGhostWord = ''; clearTimeout(typingTimer); typingTimer = setTimeout(() => fetchSuggestions(getEditorText()), DEBOUNCE);
+        }
+
+        editor.addEventListener('keydown', e => {
+            if (e.key === 'Tab') { e.preventDefault(); if (ghostSpan) acceptGhost(); return; }
+            if (!['Shift','Control','Alt','Meta','CapsLock','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) removeGhost();
+        });
+
+        editor.addEventListener('input', () => {
+            const text = getEditorText(); clearTimeout(typingTimer);
+            if (text.endsWith(' ') || text.endsWith('\n')) typingTimer = setTimeout(() => fetchSuggestions(text), DEBOUNCE);
+        });
+
+        editor.addEventListener('mousedown', removeGhost);
+        
+        window.appendWord = function(word) {
+            removeGhost(); editor.focus();
+            const sel = window.getSelection(); let range = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0) : document.createRange();
+            if (!sel || sel.rangeCount === 0) { range.selectNodeContents(editor); range.collapse(false); }
+            
+            const currentText = getEditorText();
+            const prefix = currentText.length > 0 && !currentText.endsWith(' ') ? ' ' : '';
+            const textNode = document.createTextNode(prefix + word + ' ');
+            range.insertNode(textNode);
+            
+            const newRange = document.createRange(); newRange.setStartAfter(textNode); newRange.collapse(true);
+            sel.removeAllRanges(); sel.addRange(newRange);
+            
+            sugg.innerHTML = '<span class="text-sm text-slate-400 italic mt-1">Đang tải...</span>';
+            clearTimeout(typingTimer); typingTimer = setTimeout(() => fetchSuggestions(getEditorText()), DEBOUNCE);
+        };
+
+        function createSuggestionTags(wordsData, colorClass, bgClass, hoverBg) {
+            if (!wordsData || wordsData.length === 0) return '<span class="text-sm text-slate-400 italic mt-1">Không có gợi ý</span>';
+            return wordsData.map(item => `
+                <button onclick="appendWord('${item.word}')" class="px-4 py-2 rounded-full text-sm font-medium ${bgClass} ${colorClass} hover:${hoverBg} flex items-center shadow-sm transition-all duration-200">
+                    ${item.word} <span class="ml-2 text-xs opacity-60 bg-white bg-opacity-40 px-1.5 rounded-full">${item.prob}%</span>
+                </button>
+            `).join('');
+        }
+
+        async function fetchSuggestions(text) {
+            if (!text.trim()) {
+                removeGhost();
+                sugg.innerHTML = '<span class="text-sm text-slate-400 italic mt-1">Đang chờ nhập liệu...</span>';
+                return;
+            }
+            loader.classList.remove('hidden');
+            try {
+                const response = await fetch('/suggest', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ text, method: methodSelect.value, top_k: parseInt(topKInput.value) }) 
+                });
+                const data = await response.json();
+                if (getEditorText() !== text) return;
+                
+                sugg.innerHTML = createSuggestionTags(data.suggestions, 'text-purple-700', 'bg-purple-100', 'bg-purple-200');
+                
+                let best = (data.suggestions && data.suggestions.length > 0) ? data.suggestions[0].word : '';
+                insertGhost(best);
+            } catch (err) { 
+                console.error('Lỗi fetch:', err); 
+            } finally { 
+                loader.classList.add('hidden'); 
+            }
+        }
+        
+        methodSelect.addEventListener('change', () => fetchSuggestions(getEditorText()));
+        topKInput.addEventListener('change', () => fetchSuggestions(getEditorText()));
+    </script>
+</body>
+</html>
