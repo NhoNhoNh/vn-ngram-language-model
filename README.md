@@ -1,6 +1,6 @@
 # Vietnamese N-gram Language Model
 
-Dự án này triển khai mô hình ngôn ngữ N-gram (Trigram) cho tiếng Việt với các kỹ thuật làm mịn (smoothing) khác nhau và hệ thống đánh giá hiệu năng chi tiết.
+Dự án này triển khai mô hình ngôn ngữ N-gram (Bigram, Trigram,...) cho tiếng Việt với các kỹ thuật làm mịn (smoothing) khác nhau và hệ thống đánh giá hiệu năng chi tiết.
 
 ## 📌 Tính năng chính
 
