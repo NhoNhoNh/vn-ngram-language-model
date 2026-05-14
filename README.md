@@ -2,6 +2,13 @@
 
 Dự án này triển khai mô hình ngôn ngữ N-gram (Bigram, Trigram,...) cho tiếng Việt với các kỹ thuật làm mịn (smoothing) khác nhau và hệ thống đánh giá hiệu năng chi tiết.
 
+## 📺 Demo Video
+[![Xem Demo](https://img.youtube.com/vi/omisfP0lVwo/0.jpg)](https://www.youtube.com/watch?v=omisfP0lVwo)
+
+## 📦 Dataset & Model
+Bạn có thể tải tập dữ liệu đã xử lý và các mô hình đã huấn luyện tại Hugging Face:
+- **Hugging Face Dataset**: [vietnamese-wiki-ngram](https://huggingface.co/datasets/nhonguyen25/vietnamese-wiki-ngram)
+
 ## 📌 Tính năng chính
 
 - **Hỗ trợ N-gram tổng quát**: Dễ dàng tùy chỉnh kích thước cửa sổ (n=2, 3, ...).
