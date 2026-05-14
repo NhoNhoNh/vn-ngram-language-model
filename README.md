@@ -49,9 +49,9 @@ pip install pyvi underthesea pandas numpy tqdm datasets loguru
 
 | Model | Perplexity | Top-1 Accuracy | Top-5 Accuracy |
 | :--- | :---: | :---: | :---: |
-| Trigram (Kneser-Ney) | ~305.11 | ~14.2% | ~28.5% |
-| Trigram (Add-k) | ~4125.87 | ... | ... |
-| Trigram (Laplace) | ~39143.77 | ... | ... |
+| Trigram (Kneser-Ney) | ~305.11 | ~22.04% | ~38.34% |
+| Trigram (Add-k) | ~4125.87 | ~21.41% | ~36.62% |
+| Trigram (Laplace) | ~39143.77 | ~21.41% | ~36.62% |
 
 *(Lưu ý: Kết quả thực tế phụ thuộc vào kích thước corpus và tham số k/discount)*
 
@@ -60,6 +60,3 @@ pip install pyvi underthesea pandas numpy tqdm datasets loguru
 - **Thư viện NLP**: PyVi, Underthesea
 - **Phân tích dữ liệu**: Pandas, Numpy
 - **Công cụ**: Jupyter Notebook / Google Colab
-
----
-Được thực hiện bởi: [Tên của bạn/Team]
