@@ -28,10 +28,13 @@ Bạn có thể tải tập dữ liệu đã xử lý và các mô hình đã hu
 ## 📂 Cấu trúc dự án
 
 ```text
-├── crawl_data.ipynb      # Thu thập dữ liệu từ Wikipedia
-├── tokenization.ipynb    # Tiền xử lý, tách từ và chuẩn bị dataset
+├── crawl_data.ipynb      # Thu thập dữ liệu và tiền xử lý (tokenization)
 ├── train_ngrams.ipynb    # Huấn luyện mô hình với các loại smoothing
 ├── evaluation.ipynb      # Đánh giá Perplexity, Accuracy và Error Analysis
+├── ngram_model.py        # Module định nghĩa mô hình N-gram
+├── app.py                # Web application (FastAPI)
+├── templates/            # Giao diện người dùng
+│   └── index.html
 ├── data/                 # Thư mục chứa dữ liệu
 │   ├── raws/             # Dữ liệu thô
 │   └── train/            # Dữ liệu đã xử lý và các mô hình đã lưu
