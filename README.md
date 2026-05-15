@@ -6,7 +6,7 @@ Dự án này triển khai mô hình ngôn ngữ N-gram (Bigram, Trigram,...) ch
 [![Xem Demo](https://img.youtube.com/vi/omisfP0lVwo/0.jpg)](https://www.youtube.com/watch?v=omisfP0lVwo)
 
 ## 📦 Dataset & Model
-Bạn có thể tải tập dữ liệu đã xử lý và các mô hình đã huấn luyện tại Hugging Face:
+Bạn có thể tải tập dữ liệu thu thập từ wiki đã xử lý để huấn luyện các mô hình tại Hugging Face:
 - **Hugging Face Dataset**: [vietnamese-wiki-ngram](https://huggingface.co/datasets/nhonguyen25/vietnamese-wiki-ngram)
 
 ## 📌 Tính năng chính
