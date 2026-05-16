@@ -276,5 +276,3 @@ for word, prob in suggestions:
 - **Môi trường Nghiên cứu & Huấn luyện**: Jupyter Notebook / Google Colab
 - **Quản lý & Log hệ thống**: `Loguru`, `tqdm`
 
----
-*Tài liệu được trình bày và tổng hợp đầy đủ theo tiêu chuẩn báo cáo nghiên cứu khoa học NLP.*
